@@ -7,16 +7,15 @@ namespace Game.Packet
     public enum ePACKETTYPE
     {
         NONE,
-        PEERINFO = 1000,
+        USERINFO = 1000,
         CHARSELECT,
         CHARMOVE
     }
-    public struct PEERINFO
+    public struct USERINFO
     {
         public ePACKETTYPE ePacketType;
         public int uid;
         public string name;
-        public short charType;
     }
     public struct CHARMOVE
     {
