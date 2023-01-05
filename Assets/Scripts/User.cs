@@ -41,6 +41,7 @@ namespace ConnectServer.User
             sBuff = new byte[128];
             rBuff = new byte[128];
             packetQueue = new Queue<byte[]>();
+            info = new Dictionary<string, string>();
             ThreadStart threadStart = new ThreadStart(NewConnect);
             thread = new Thread(threadStart);
             thread.Start();
@@ -83,7 +84,7 @@ namespace ConnectServer.User
                                 Array.Copy(data, 2, name, 0, name.Length);
                                 Array.Copy(data, 12, id, 0, name.Length);
                                 Array.Copy(data, 32, pw, 0, name.Length);
-                                Array.Copy(data, 42, email, 0, name.Length);
+                                Array.Copy(data, 72, email, 0, name.Length);
                                 info.Add("name", Encoding.Default.GetString(name));
                                 info.Add("id", Encoding.Default.GetString(id));
                                 info.Add("pw", Encoding.Default.GetString(pw));
