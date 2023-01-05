@@ -8,14 +8,27 @@ namespace Game.Packet
     {
         NONE,
         USERINFO = 1000,
-        CHARSELECT,
+        LOGININFO,
+        REGISTINFO,
         CHARMOVE
     }
     public struct USERINFO
     {
         public ePACKETTYPE ePacketType;
         public int uid;
+    }
+    public struct LOGININFO
+    {
+        public ePACKETTYPE ePacketType;
+        public int uid;
+    }
+    public struct REGISTINFO
+    {
+        public ePACKETTYPE ePacketType;
         public string name;
+        public string id;
+        public string pw;
+        public string email;
     }
     public struct CHARMOVE
     {

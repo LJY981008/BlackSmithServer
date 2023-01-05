@@ -5,7 +5,6 @@ using System;
 using System.Net.Sockets;
 using System.Threading;
 using System.Net;
-using Game.Packet;
 using ConnectServer.User;
 /// <summary>
 /// 패킷타입 기본, 캐릭터 선택
@@ -78,8 +77,10 @@ public class Server : MonoBehaviour
     private void OnDestroy()
     {
         isInterrupt = true;
+        
         foreach(KeyValuePair<int, User> user in userList)
         {
+            user.Value.isInterrupt = true;
             user.Value.Close();
         }
     }

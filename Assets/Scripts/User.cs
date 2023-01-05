@@ -27,11 +27,15 @@ namespace ConnectServer.User
         public Socket userSock;
         public byte[] sBuff;
         public byte[] rBuff;
+        public bool isInterrupt;
         public Thread thread;
+        public Thread rThread;
         private Queue<byte[]> packetQueue;
         private int uid;
+        private Dictionary<string, string> info;
         public User(Socket _sock, int _uid)
         {
+            isInterrupt = false;
             userSock = _sock;
             uid = _uid;
             sBuff = new byte[128];
@@ -40,6 +44,9 @@ namespace ConnectServer.User
             ThreadStart threadStart = new ThreadStart(NewConnect);
             thread = new Thread(threadStart);
             thread.Start();
+            ThreadStart threadStartReceive = new ThreadStart(CallReceive);
+            rThread = new Thread(threadStartReceive);
+            rThread.Start();
         }
         public void NewConnect()
         {
@@ -51,6 +58,47 @@ namespace ConnectServer.User
             catch (SocketException e)
             {
                 Debug.Log(e.Message);
+            }
+        }
+        public void CallReceive()
+        {
+            while (!isInterrupt)
+            {
+                if(packetQueue.Count > 0)
+                {
+                    byte[] data = new byte[128];
+                    byte[] _packet = new byte[2];
+                    data = packetQueue.Dequeue();
+                    Array.Copy(data, 0, _packet, 0, _packet.Length);
+                    short type = BitConverter.ToInt16(_packet);
+                    switch ((int)type)
+                    {
+                        case (int)ePACKETTYPE.REGISTINFO:
+                            {
+                                info.Clear();
+                                byte[] name = new byte[10];
+                                byte[] id = new byte[30];
+                                byte[] pw = new byte[40];
+                                byte[] email = new byte[60];
+                                Array.Copy(data, 2, name, 0, name.Length);
+                                Array.Copy(data, 12, id, 0, name.Length);
+                                Array.Copy(data, 32, pw, 0, name.Length);
+                                Array.Copy(data, 42, email, 0, name.Length);
+                                info.Add("name", Encoding.Default.GetString(name));
+                                info.Add("id", Encoding.Default.GetString(id));
+                                info.Add("pw", Encoding.Default.GetString(pw));
+                                info.Add("email", Encoding.Default.GetString(email));
+                                foreach (KeyValuePair<string, string> tmp in info)
+                                {
+                                    Debug.Log(tmp.Key + " : " + tmp.Value);
+                                }
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                Thread.Sleep(10);
             }
         }
         public void Receive()
@@ -106,14 +154,10 @@ namespace ConnectServer.User
             USERINFO userInfo;
             userInfo.ePacketType = ePACKETTYPE.USERINFO;
             userInfo.uid = uid;
-            userInfo.name = $"I{uid}I";
             byte[] _packetType = BitConverter.GetBytes((short)userInfo.ePacketType);
             byte[] _uid = BitConverter.GetBytes((int)userInfo.uid);
-            byte[] _name = Encoding.Default.GetBytes(userInfo.name);
             Array.Copy(_packetType, 0, sBuff, 0, _packetType.Length);
             Array.Copy(_uid, 0, sBuff, 2, _uid.Length);
-            Array.Copy(_name, 0, sBuff, 6, _name.Length);
-            Debug.Log(sBuff);
         }
 
         /// <summary>
