@@ -6,10 +6,13 @@ using UnityEngine;
 
 public static class UserInfoToJson
 {
-    static string pathJson = Path.Combine(Application.dataPath, "/Documents/BS_Server/");
+    static string pathJson;
     static string jsonName = "userInfo.json";
     static List<string> infoList = new List<string>();
-
+    public static void SetPath()
+    {
+        pathJson = Path.Combine(Application.dataPath, "/Documents/BSServer/");
+    }
     public static void SaveInfo(List<string> _infoList)
     {
         infoList = _infoList;
@@ -22,8 +25,8 @@ public static class UserInfoToJson
             Directory.CreateDirectory(pathJson);
             File.WriteAllText(pathJson + jsonName, jsonData);
         }
+        Debug.Log("¿˙¿Â");
     }
-
     public static List<string> LoadInfo()
     {
         try

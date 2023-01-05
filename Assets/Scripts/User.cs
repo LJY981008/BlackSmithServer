@@ -22,7 +22,7 @@ namespace ConnectServer.User
         public USERINFO userInfo;
         public DelegateInfo delInfo;
     }
-    public class User
+    public class User:IDisposable
     {
         public Socket userSock;
         public byte[] sBuff;
@@ -32,7 +32,7 @@ namespace ConnectServer.User
         public Thread rThread;
         private Queue<byte[]> packetQueue;
         private int uid;
-        private Dictionary<string, string> info;
+        private List<string> info;
         public User(Socket _sock, int _uid)
         {
             isInterrupt = false;
@@ -41,13 +41,18 @@ namespace ConnectServer.User
             sBuff = new byte[128];
             rBuff = new byte[128];
             packetQueue = new Queue<byte[]>();
-            info = new Dictionary<string, string>();
+            info = new List<string>();
             ThreadStart threadStart = new ThreadStart(NewConnect);
             thread = new Thread(threadStart);
             thread.Start();
+            thread.Join();
+            thread.Interrupt();
             ThreadStart threadStartReceive = new ThreadStart(CallReceive);
             rThread = new Thread(threadStartReceive);
             rThread.Start();
+            rThread.Join();
+            rThread.Interrupt();
+            Dispose();
         }
         public void NewConnect()
         {
@@ -72,9 +77,10 @@ namespace ConnectServer.User
                     data = packetQueue.Dequeue();
                     Array.Copy(data, 0, _packet, 0, _packet.Length);
                     short type = BitConverter.ToInt16(_packet);
-                    switch ((int)type)
+                    Debug.Log(type);
+                    switch (type)
                     {
-                        case (int)ePACKETTYPE.REGISTINFO:
+                        case (short)ePACKETTYPE.REGISTINFO:
                             {
                                 info.Clear();
                                 byte[] name = new byte[10];
@@ -85,14 +91,16 @@ namespace ConnectServer.User
                                 Array.Copy(data, 12, id, 0, name.Length);
                                 Array.Copy(data, 32, pw, 0, name.Length);
                                 Array.Copy(data, 72, email, 0, name.Length);
-                                info.Add("name", Encoding.Default.GetString(name));
-                                info.Add("id", Encoding.Default.GetString(id));
-                                info.Add("pw", Encoding.Default.GetString(pw));
-                                info.Add("email", Encoding.Default.GetString(email));
-                                foreach (KeyValuePair<string, string> tmp in info)
-                                {
-                                    Debug.Log(tmp.Key + " : " + tmp.Value);
-                                }
+                                info.Add(Encoding.Default.GetString(name));
+                                info.Add(Encoding.Default.GetString(id));
+                                info.Add(Encoding.Default.GetString(pw));
+                                info.Add(Encoding.Default.GetString(email));
+                                UserInfoToJson.SaveInfo(info);
+                            }
+                            break;
+                        case (short)ePACKETTYPE.EXIT:
+                            {
+                                isInterrupt = true;
                             }
                             break;
                         default:
@@ -145,7 +153,6 @@ namespace ConnectServer.User
             byte[] data = new byte[128];
             Array.Copy(sBuff, 0, data, 0, sBuff.Length);
             Array.Clear(sBuff, 0, sBuff.Length);
-            packetQueue.Enqueue(data);
             userSock.BeginReceive(rBuff, 0, rBuff.Length, SocketFlags.None, ReceiveCallBack, userSock);
 
         }
@@ -183,6 +190,19 @@ namespace ConnectServer.User
             Array.Copy(yPos, 0, sBuff, 10, yPos.Length);
             Array.Copy(zPos, 0, sBuff, 14, zPos.Length);
         }
-    }
 
+        public void Dispose()
+        {
+            try
+            {
+                userSock.Shutdown(SocketShutdown.Both);
+                userSock.Close();
+                GC.SuppressFinalize(this);
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e.Message);
+            }
+        }
+    }
 }

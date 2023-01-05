@@ -11,7 +11,7 @@ using ConnectServer.User;
 /// </summary>
 
 
-public class Server : MonoBehaviour
+public class ServerManager : Singleton<ServerManager>
 {
 
     private Socket listenSock;
@@ -20,7 +20,7 @@ public class Server : MonoBehaviour
     private GameObject otherPlayer;
     private Queue<byte[]> packetQueue;
     private Thread thread;
-    private Dictionary<int ,User> userList;
+    public Dictionary<int ,User> userList;
 
     private byte[] sBuff;
     private byte[] rBuff;
@@ -38,6 +38,7 @@ public class Server : MonoBehaviour
         rBuff = new byte[128];
         isInterrupt = false;
         userList = new Dictionary<int, User>();
+        UserInfoToJson.SetPath();
     }
     private void Start()
     {
@@ -62,6 +63,11 @@ public class Server : MonoBehaviour
             Thread.Sleep(10);
         }
     }
+    public void ExitUser(int uid)
+    {
+        Debug.Log("소멸");
+        userList.Remove(uid);
+    }
     /// <summary>
     /// 피어 접속
     /// </summary>
@@ -73,15 +79,5 @@ public class Server : MonoBehaviour
         User user = new User(otherPeer,idCount);
         userList.Add(idCount, user);
         idCount++;
-    }
-    private void OnDestroy()
-    {
-        isInterrupt = true;
-        
-        foreach(KeyValuePair<int, User> user in userList)
-        {
-            user.Value.isInterrupt = true;
-            user.Value.Close();
-        }
     }
 }

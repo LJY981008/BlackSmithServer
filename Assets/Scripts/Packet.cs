@@ -10,7 +10,8 @@ namespace Game.Packet
         USERINFO = 1000,
         LOGININFO,
         REGISTINFO,
-        CHARMOVE
+        CHARMOVE,
+        EXIT
     }
     public struct USERINFO
     {
@@ -38,5 +39,9 @@ namespace Game.Packet
         public float yPos;
         public float zPos;
     }
-    
+    public struct EXIT
+    {
+        public ePACKETTYPE ePacketType;
+        public int uid;
+    }
 }
