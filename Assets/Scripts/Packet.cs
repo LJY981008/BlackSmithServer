@@ -21,7 +21,11 @@ namespace Game.Packet
     public struct LOGININFO
     {
         public ePACKETTYPE ePacketType;
-        public int uid;
+        public string id;
+        public string pw;
+        public string name;
+        public string email;
+        public int isSuccess;
     }
     public struct REGISTINFO
     {
@@ -42,6 +46,5 @@ namespace Game.Packet
     public struct EXIT
     {
         public ePACKETTYPE ePacketType;
-        public int uid;
     }
 }

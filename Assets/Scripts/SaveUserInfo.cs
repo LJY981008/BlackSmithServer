@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using SimpleJSON;
 [Serializable]
 public class SaveUserInfo
 {
@@ -41,9 +42,9 @@ public class SaveUserInfo
 [Serializable]
 public class Serialization<T>
 {
-    [SerializeField] T _t;
-    public T toReturn() { return _t; }
-    public Serialization(T _tmp)
+    [SerializeField] List<T> _t;
+    public List<T> toReturn() { return _t; }
+    public Serialization(List<T> _tmp)
     {
         _t = _tmp;
     }

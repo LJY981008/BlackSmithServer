@@ -3,46 +3,60 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using SimpleJSON;
+using System.Text;
 
 public static class UserInfoToJson
 {
+    static string pathJsonDirectory;
     static string pathJson;
-    static string jsonName = "userInfo.json";
-    static List<string> infoList = new List<string>();
+    public static List<SaveUserInfo> infoList = new List<SaveUserInfo>();
     public static void SetPath()
     {
-        pathJson = Path.Combine(Application.dataPath, "/Documents/BSServer/");
+        pathJsonDirectory = Path.Combine(Application.dataPath, "/Documents/BSServer/");
+        pathJson = Path.Combine(Application.dataPath, "/Documents/BSServer/UserInfo.json");
+        Directory.CreateDirectory(pathJsonDirectory);
+        LoadInfo();
     }
-    public static void SaveInfo(List<string> _infoList)
+    public static void SaveInfo(SaveUserInfo _info)
     {
-        infoList = _infoList;
-        SaveUserInfo info = new SaveUserInfo(infoList);
-        string jsonData = JsonUtility.ToJson(new Serialization<SaveUserInfo>(info));
+        infoList.Add(_info);
+        string jsonData = JsonUtility.ToJson(new Serialization<SaveUserInfo>(infoList));
         try {
-            File.WriteAllText(pathJson + jsonName, jsonData);
-        }catch(Exception e)
-        {
-            Directory.CreateDirectory(pathJson);
-            File.WriteAllText(pathJson + jsonName, jsonData);
+            FileStream writeStream = new FileStream(pathJson, FileMode.Create);
+            byte[] writeData = Encoding.UTF8.GetBytes(jsonData);
+            writeStream.Write(writeData, 0, writeData.Length);
+            writeStream.Close();
+            Debug.Log("저장");
         }
-        Debug.Log("저장");
+        catch(Exception e)
+        {
+            Debug.Log("실패" + e.Message);
+        }
+        
     }
-    public static List<string> LoadInfo()
+    public static void LoadInfo()
     {
         try
         {
-            SaveUserInfo info = new SaveUserInfo();
-            List<string> infoList = new List<string>();
-            string loadJson = File.ReadAllText(pathJson + jsonName);
-            info = JsonUtility.FromJson<Serialization<SaveUserInfo>>(loadJson).toReturn();
-            infoList.Add(info.NICKNAME);
-            infoList.Add(info.ID);
-            infoList.Add(info.PW);
-            infoList.Add(info.EMAIL);
-            return infoList;
-        }catch(Exception e)
+            FileStream readStream = new FileStream(pathJson, FileMode.Open);
+            byte[] data = new byte[readStream.Length];
+            readStream.Read(data, 0, data.Length);
+            readStream.Close();
+            JSONNode root = JSON.Parse(Encoding.UTF8.GetString(data))[0];
+            for (int i = 0; i < root.Count; i++)
+            {
+                SaveUserInfo origin = new SaveUserInfo();
+                origin.NICKNAME = root[i]["nickName"].Value;
+                origin.ID = root[i]["id"].Value;
+                origin.PW = root[i]["pw"].Value;
+                origin.EMAIL = root[i]["email"].Value;
+                infoList.Add(origin);
+            }
+        }
+        catch (Exception e)
         {
-            return null;
+            Debug.Log("셋" + e.Message);
         }
     }
 }

@@ -60,13 +60,20 @@ public class ServerManager : Singleton<ServerManager>
         {
             listenSock.Listen(10);
             listenSock.BeginAccept(AddPeer, null);
+            // 연결 대기를 하면서 접속해제한 유저를 체크
+            if(userList.Count > 0)
+            {
+                foreach (var user in userList)
+                {
+                    if (!user.Value.isConnect)
+                    {
+                        user.Value.Dispose();
+                        userList.Remove(user.Key);
+                    }
+                }
+            }
             Thread.Sleep(10);
         }
-    }
-    public void ExitUser(int uid)
-    {
-        Debug.Log("소멸");
-        userList.Remove(uid);
     }
     /// <summary>
     /// 피어 접속
@@ -79,5 +86,12 @@ public class ServerManager : Singleton<ServerManager>
         User user = new User(otherPeer,idCount);
         userList.Add(idCount, user);
         idCount++;
+    }
+    private void OnDestroy()
+    {
+        foreach(var user in userList)
+        {
+            user.Value.Dispose();
+        }
     }
 }
